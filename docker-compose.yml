@@ -1,0 +1,61 @@
+services:
+  age:
+    build:
+      context: .
+      dockerfile: Dockerfile.age
+    container_name: age
+    environment:
+      POSTGRES_USER: osm
+      POSTGRES_PASSWORD: osm_password
+      POSTGRES_DB: alabama_osm
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./data:/data
+      - ./scripts:/scripts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U osm -d alabama_osm"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    shm_size: 256mb
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      age:
+        condition: service_healthy
+
+  arangodb:
+    image: arangodb:3.11
+    container_name: arangodb
+    environment:
+      ARANGO_ROOT_PASSWORD: osm_password
+    ports:
+      - "8529:8529"
+    volumes:
+      - arangodb_data:/var/lib/arangodb3
+      - ./data:/data
+      - ./scripts:/scripts
+    healthcheck:
+      test: ["CMD", "arangosh", "--server.password", "osm_password", "--javascript.execute-string", "db._version()"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  arangodb_data:

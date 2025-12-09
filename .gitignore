@@ -1,0 +1,20 @@
+# Downloaded/generated data
+data/
+
+# Development files
+age_queries/
+.summary.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Environment
+.env
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
